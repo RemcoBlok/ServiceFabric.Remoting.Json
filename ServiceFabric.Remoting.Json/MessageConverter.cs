@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace ServiceFabric.Remoting.Json
@@ -41,7 +40,7 @@ namespace ServiceFabric.Remoting.Json
             }
 
             var typeName = reader.GetString();
-            var type = Type.GetType(typeName);
+            var type = TypeCache.GetType(typeName);
 
             if (!reader.Read() || reader.GetString() != "Value")
             {

@@ -18,7 +18,6 @@ namespace ServiceFabric.Remoting.Json.Tests
             // Arrange
             var sut = new ServiceRemotingJsonSerializationProvider();
             var messageBodyFactory = sut.CreateMessageBodyFactory();
-            var request = messageBodyFactory.CreateRequest(nameof(ITestActor), nameof(ITestActor.TestOperation), 1, null);
             var serializer = sut.CreateRequestMessageSerializer(typeof(ITestActor), null);
 
             var command = new TestCommand
@@ -26,6 +25,8 @@ namespace ServiceFabric.Remoting.Json.Tests
                 DateOfBirth = DateOnly.FromDateTime(DateTime.Today),
                 DeliveryDate = DateOnly.FromDateTime(DateTime.Today).AddDays(-1)
             };
+
+            var request = messageBodyFactory.CreateRequest(nameof(ITestActor), nameof(ITestActor.TestOperation), 1, null);
             request.SetParameter(0, "command", command);
 
             // Act
@@ -50,10 +51,11 @@ namespace ServiceFabric.Remoting.Json.Tests
             // Arrange
             var sut = new ServiceRemotingJsonSerializationProvider();
             var messageBodyFactory = sut.CreateMessageBodyFactory();
-            var response = messageBodyFactory.CreateResponse(nameof(ITestActor), nameof(ITestActor.TestOperation), null);
             var serializer = sut.CreateResponseMessageSerializer(typeof(ITestActor), null);
 
             var responseValue = true;
+
+            var response = messageBodyFactory.CreateResponse(nameof(ITestActor), nameof(ITestActor.TestOperation), null);
             response.Set(responseValue);
 
             // Act

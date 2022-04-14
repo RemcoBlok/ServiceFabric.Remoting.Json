@@ -1,6 +1,4 @@
 ﻿using Microsoft.ServiceFabric.Services.Remoting.V2;
-using System;
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace ServiceFabric.Remoting.Json

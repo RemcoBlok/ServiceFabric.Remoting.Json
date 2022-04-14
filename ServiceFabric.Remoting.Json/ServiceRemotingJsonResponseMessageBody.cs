@@ -1,5 +1,4 @@
 ﻿using Microsoft.ServiceFabric.Services.Remoting.V2;
-using System;
 
 namespace ServiceFabric.Remoting.Json
 {

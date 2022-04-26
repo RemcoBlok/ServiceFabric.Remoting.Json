@@ -6,13 +6,13 @@ namespace ServiceFabric.Remoting.Json
 {
     public class DateOnlyConverter : JsonConverter<DateOnly>
     {
-        private const string DateFormat = "yyyy-MM-dd";
+        private const string DateFormat = "O";
 
         public override DateOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             try
             {
-                return DateOnly.ParseExact(reader.GetString(), DateFormat, CultureInfo.InvariantCulture);
+                return DateOnly.ParseExact(reader.GetString(), DateFormat);
             }
             catch (FormatException)
             {
@@ -22,7 +22,7 @@ namespace ServiceFabric.Remoting.Json
 
         public override void Write(Utf8JsonWriter writer, DateOnly value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value.ToString(DateFormat, CultureInfo.InvariantCulture));
+            writer.WriteStringValue(value.ToString(DateFormat, null));
         }
     }
 }

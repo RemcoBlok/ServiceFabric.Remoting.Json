@@ -5,18 +5,16 @@ namespace ServiceFabric.Remoting.Json
 {
     public class MessageConverter : JsonConverter<object>
     {
+        private static readonly JsonEncodedText TypePropertyName = JsonEncodedText.Encode("$type");
+        private static readonly JsonEncodedText ValuePropertyName = JsonEncodedText.Encode("value");
+
         private static readonly JsonSerializerOptions Options = new()
         {
-            AllowTrailingCommas = true,
-            PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReadCommentHandling = JsonCommentHandling.Skip,
-            WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters =
             {
-                new DateOnlyConverter(),
-                new DateOnlyNullableConverter()
+                new DateOnlyConverter()
             }
         };
 
@@ -29,7 +27,7 @@ namespace ServiceFabric.Remoting.Json
 
             if (!reader.Read()
                 || reader.TokenType != JsonTokenType.PropertyName
-                || reader.GetString() != "$type")
+                || !reader.ValueTextEquals(TypePropertyName.EncodedUtf8Bytes))
             {
                 throw new JsonException();
             }
@@ -42,7 +40,9 @@ namespace ServiceFabric.Remoting.Json
             var typeName = reader.GetString();
             var type = TypeCache.GetType(typeName);
 
-            if (!reader.Read() || reader.GetString() != "Value")
+            if (!reader.Read()
+                || reader.TokenType != JsonTokenType.PropertyName
+                || !reader.ValueTextEquals(ValuePropertyName.EncodedUtf8Bytes))
             {
                 throw new JsonException();
             }
@@ -63,8 +63,8 @@ namespace ServiceFabric.Remoting.Json
             var typeName = type.GetSimpleAssemblyQualifiedName();
 
             writer.WriteStartObject();
-            writer.WriteString("$type", typeName);
-            writer.WritePropertyName("Value");
+            writer.WriteString(TypePropertyName, typeName);
+            writer.WritePropertyName(ValuePropertyName);
             JsonSerializer.Serialize(writer, value, type, Options);
             writer.WriteEndObject();
         }

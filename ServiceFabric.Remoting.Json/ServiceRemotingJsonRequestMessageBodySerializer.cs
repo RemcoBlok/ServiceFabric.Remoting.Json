@@ -9,30 +9,40 @@ namespace ServiceFabric.Remoting.Json
     {
         private static readonly JsonSerializerOptions Options = new()
         {
-            AllowTrailingCommas = true,
-            PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReadCommentHandling = JsonCommentHandling.Skip,
-            WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters =
             {
-                new DateOnlyConverter(),
-                new DateOnlyNullableConverter(),
                 new ActorConverter(),
                 new MessageConverter()
             }
         };
 
+        private readonly IBufferPoolManager _bufferPoolManager;
+
+        public ServiceRemotingJsonRequestMessageBodySerializer(IBufferPoolManager bufferPoolManager)
+        {
+            _bufferPoolManager = bufferPoolManager;
+        }
+
         public IServiceRemotingRequestMessageBody Deserialize(IIncomingMessageBody messageBody)
         {
-            if (messageBody == null || messageBody.GetReceivedBuffer() == null || messageBody.GetReceivedBuffer().Length == 0)
+            if (messageBody == null)
             {
                 return null;
             }
 
-            var serviceRemotingRequestMessageBody = JsonSerializer.Deserialize<ServiceRemotingJsonRequestMessageBody>(messageBody.GetReceivedBuffer(), Options);
-            return serviceRemotingRequestMessageBody;
+            var receivedBufferStream = messageBody.GetReceivedBuffer();
+            if (receivedBufferStream == null || receivedBufferStream.Length == 0)
+            {
+                return null;
+            }
+
+            using (receivedBufferStream)
+            {
+                var serviceRemotingRequestMessageBody = JsonSerializer.Deserialize<ServiceRemotingJsonRequestMessageBody>(receivedBufferStream, Options);
+                return serviceRemotingRequestMessageBody;
+            }
         }
 
         public IOutgoingMessageBody Serialize(IServiceRemotingRequestMessageBody serviceRemotingRequestMessageBody)
@@ -42,10 +52,13 @@ namespace ServiceFabric.Remoting.Json
                 return null;
             }
 
-            var bytes = JsonSerializer.SerializeToUtf8Bytes<object>(serviceRemotingRequestMessageBody, Options);
-            var segment = new ArraySegment<byte>(bytes);
-            var segments = new[] { segment };
-            return new OutgoingMessageBody(segments);
+            using var stream = new SegmentedPoolMemoryStream(_bufferPoolManager);
+            using var writer = new Utf8JsonWriter(stream);
+
+            JsonSerializer.Serialize<object>(writer, serviceRemotingRequestMessageBody, Options);
+
+            var outgoingPooledBodyBuffers = stream.GetBuffers();
+            return new OutgoingMessageBody(outgoingPooledBodyBuffers);
         }
     }
 }

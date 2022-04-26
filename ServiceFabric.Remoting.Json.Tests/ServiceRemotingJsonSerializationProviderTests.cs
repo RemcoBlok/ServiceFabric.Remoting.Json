@@ -33,7 +33,7 @@ namespace ServiceFabric.Remoting.Json.Tests
             using var outgoingMessageBody = serializer.Serialize(request);
 
             var segments = outgoingMessageBody.GetSendBuffers();
-            var bytes = segments.SelectMany(s => s.Array).ToArray();
+            var bytes = segments.SelectMany(s => s.ToArray()).ToArray();
 
             using var receivedBufferStream = new MemoryStream(bytes);
             using var incomingMessageBody = new IncomingMessageBody(receivedBufferStream);
@@ -62,7 +62,7 @@ namespace ServiceFabric.Remoting.Json.Tests
             using var outgoingMessageBody = serializer.Serialize(response);
 
             var segments = outgoingMessageBody.GetSendBuffers();
-            var bytes = segments.SelectMany(s => s.Array).ToArray();
+            var bytes = segments.SelectMany(s => s.ToArray()).ToArray();
 
             using var receivedBufferStream = new MemoryStream(bytes);
             using var incomingMessageBody = new IncomingMessageBody(receivedBufferStream);
